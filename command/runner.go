@@ -99,7 +99,7 @@ func invocationsInFile(dir string, file string) ([]Invocation, error) {
 	return result, nil
 }
 
-const generateDirectivePrefix = "//counterfeiter:generate "
+const generateDirectivePrefix = "// counterfeiter:generate "
 
 func matchForString(s string) ([]string, bool) {
 	if !strings.HasPrefix(s, generateDirectivePrefix) {
