@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -109,10 +110,15 @@ func matchForString(s string) ([]string, bool) {
 }
 
 func stringToArgs(s string) []string {
-	a := strings.Fields(s)
+	r := regexp.MustCompile(`\"[^\"]+\"|\S+`)
+	a := r.FindAllString(s, -1)
 	result := []string{
 		"counterfeiter",
 	}
-	result = append(result, a...)
+
+	for _, s = range a {
+		result = append(result, strings.Trim(s, "\""))
+	}
+
 	return result
 }

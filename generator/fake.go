@@ -31,6 +31,7 @@ type Fake struct {
 	Mode               FakeMode
 	DestinationPackage string
 	Name               string
+	GenericType        string
 	TargetAlias        string
 	TargetName         string
 	TargetPackage      string
@@ -38,6 +39,7 @@ type Fake struct {
 	Methods            []Method
 	Function           Method
 	Header             string
+	IsGeneric          bool
 }
 
 // Method is a method of the interface.
@@ -49,7 +51,7 @@ type Method struct {
 
 // NewFake returns a Fake that loads the package and finds the interface or the
 // function.
-func NewFake(fakeMode FakeMode, targetName string, packagePath string, fakeName string, destinationPackage string, headerContent string, workingDir string, cache Cacher) (*Fake, error) {
+func NewFake(fakeMode FakeMode, targetName, packagePath, fakeName, destinationPackage, geenricType string, isGeneric bool, headerContent, workingDir string, cache Cacher) (*Fake, error) {
 	f := &Fake{
 		TargetName:         targetName,
 		TargetPackage:      packagePath,
@@ -58,6 +60,8 @@ func NewFake(fakeMode FakeMode, targetName string, packagePath string, fakeName 
 		DestinationPackage: destinationPackage,
 		Imports:            newImports(),
 		Header:             headerContent,
+		IsGeneric:          isGeneric,
+		GenericType:        geenricType,
 	}
 
 	f.Imports.Add("sync", "sync")
@@ -120,8 +124,13 @@ func isExported(s string) bool {
 func (f *Fake) Generate(runImports bool) ([]byte, error) {
 	var tmpl *template.Template
 	if f.IsInterface() {
-		log.Printf("Writing fake %s for interface %s to package %s\n", f.Name, f.TargetName, f.DestinationPackage)
-		tmpl = template.Must(template.New("fake").Funcs(interfaceFuncs).Parse(interfaceTemplate))
+		if f.IsGeneric {
+			log.Printf("Writing fake %s for generic interface %s to package %s\n", f.Name, f.TargetName, f.DestinationPackage)
+			tmpl = template.Must(template.New("fake").Funcs(genericIinterfaceFuncs).Parse(genericInterfaceTemplate))
+		} else {
+			log.Printf("Writing fake %s for interface %s to package %s\n", f.Name, f.TargetName, f.DestinationPackage)
+			tmpl = template.Must(template.New("fake").Funcs(interfaceFuncs).Parse(interfaceTemplate))
+		}
 	}
 	if f.IsFunction() {
 		log.Printf("Writing fake %s for function %s to package %s\n", f.Name, f.TargetName, f.DestinationPackage)

@@ -82,7 +82,8 @@ func New(args []string, workingDir string, evaler Evaler, stater Stater) (*Parse
 	if err != nil {
 		return nil, err
 	}
-	result.parseInterfaceName(packageMode, fs.Args())
+
+	result.parseInterfaceName(packageMode, &result.IsGeneric, fs.Args())
 	result.parseFakeName(packageMode, *fakeNameFlag, fs.Args())
 	result.parseOutputPath(packageMode, workingDir, *outputPathFlag, fs.Args())
 	result.parseDestinationPackageName(packageMode, fs.Args())
@@ -95,7 +96,7 @@ func (a *ParsedArguments) PrettyPrint() {
 	fmt.Println(string(b))
 }
 
-func (a *ParsedArguments) parseInterfaceName(packageMode bool, args []string) {
+func (a *ParsedArguments) parseInterfaceName(packageMode bool, isGeneric *bool, args []string) {
 	if packageMode {
 		a.InterfaceName = ""
 		return
@@ -105,6 +106,13 @@ func (a *ParsedArguments) parseInterfaceName(packageMode bool, args []string) {
 		a.InterfaceName = fullyQualifiedInterface[len(fullyQualifiedInterface)-1]
 	} else {
 		a.InterfaceName = args[1]
+	}
+
+	if strings.HasSuffix(a.InterfaceName, "]") {
+		parts := strings.Split(a.InterfaceName, "[")
+		a.InterfaceName = parts[0]
+		*isGeneric = true
+		a.GenericType = strings.TrimRight(parts[1], "]")
 	}
 }
 
@@ -205,6 +213,9 @@ type ParsedArguments struct {
 
 	InterfaceName string // the interface to counterfeit
 	FakeImplName  string // the name of the struct implementing the given interface
+
+	IsGeneric   bool   // is it a generic interface?
+	GenericType string // if it is a generic interface, this will be the generic type
 
 	PrintToStdOut bool
 	GenerateMode  bool

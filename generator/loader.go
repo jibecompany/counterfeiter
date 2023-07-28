@@ -69,7 +69,11 @@ func (f *Fake) findPackage() error {
 			break
 		}
 
-		raw := pkg.Types.Scope().Lookup(f.TargetName)
+		targetName := f.TargetName
+		if f.IsGeneric {
+			targetName = strings.Split(targetName, "[")[0]
+		}
+		raw := pkg.Types.Scope().Lookup(targetName)
 		if raw != nil {
 			if typeName, ok := raw.(*types.TypeName); ok {
 				target = typeName
